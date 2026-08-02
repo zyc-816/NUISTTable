@@ -1,6 +1,5 @@
 package com.example.nuisttable.ui.asset
 
-
 import android.annotation.SuppressLint
 import android.net.http.SslError
 import android.util.Log
@@ -15,7 +14,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -25,10 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 
-
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun CreateWebView(url : String, onClose : () -> Unit, onLoginSeccess : (cookie : String) -> Unit) {
+fun CreateWebView(url : String, onClose : () -> Unit, onLoginSuccess : (cookie : String) -> Unit) {
     var webView : WebView? by remember { mutableStateOf(null) }
     var hasReturned by remember { mutableStateOf(false) }
     BackHandler {
@@ -44,15 +41,13 @@ fun CreateWebView(url : String, onClose : () -> Unit, onLoginSeccess : (cookie :
     }
 
     AndroidView(
-        modifier = Modifier
-            .fillMaxSize()
-            .systemBarsPadding(),
+        modifier = Modifier.fillMaxSize(),
         factory = { context ->
             WebView.setWebContentsDebuggingEnabled(true)
             WebView(context).apply {
                 webView = this
                 val cookieManager = CookieManager.getInstance()
-                var ua = settings.userAgentString.replace("; wv", "")
+                val desktopChromeUa = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
                 cookieManager.setAcceptCookie(true)
                 cookieManager.setAcceptThirdPartyCookies(this, true)
                 webChromeClient = WebChromeClient()
@@ -65,18 +60,24 @@ fun CreateWebView(url : String, onClose : () -> Unit, onLoginSeccess : (cookie :
                             val cookie = cookieManager.getCookie("https://jwxt.nuist.edu.cn/jwapp/sys/wdkb/*default/index.do?EMAP_LANG=zh#/xskcb")
                             if(!cookie.isNullOrEmpty() && cookie.contains("GS_SESSIONID")) {
                                 hasReturned = true
-                                onLoginSeccess(cookie)
+                                onLoginSuccess(cookie)
                             }
                         }
                         Log.d("WebView", "finished: $finUrl")
                     }
+
                     override fun onReceivedSslError(
                         view: WebView?,
                         handler: SslErrorHandler?,
                         error: SslError?
                     ) {
+                        Log.e(
+                            "WebViewSsl",
+                            "url=${view?.url}, primaryError=${error?.primaryError}, certificate=${error?.certificate}"
+                        )
                         handler?.proceed()
                     }
+
                     override fun onReceivedError(
                         view: WebView?,
                         request: WebResourceRequest?,
@@ -88,6 +89,7 @@ fun CreateWebView(url : String, onClose : () -> Unit, onLoginSeccess : (cookie :
                             "url=${request?.url}, isMainFrame=${request?.isForMainFrame}, code=${error?.errorCode}, desc=${error?.description}"
                         )
                     }
+
                     override fun onReceivedHttpError(
                         view: WebView?,
                         request: WebResourceRequest?,
@@ -96,15 +98,21 @@ fun CreateWebView(url : String, onClose : () -> Unit, onLoginSeccess : (cookie :
                         super.onReceivedHttpError(view, request, errorResponse)
                         Log.e(
                             "WebViewHttp",
-                            "url=${request?.url}, isMainFrame=${request?.isForMainFrame}, code=${errorResponse?.statusCode}"
+                            "url=${request?.url}, isMainFrame=${request?.isForMainFrame}, code=${errorResponse?.statusCode}, mime=${errorResponse?.mimeType}, reason=${errorResponse?.reasonPhrase}"
                         )
                     }
-
                 }
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                settings.userAgentString = ua
+                settings.userAgentString = desktopChromeUa
+                settings.javaScriptCanOpenWindowsAutomatically = true
+                settings.setSupportMultipleWindows(true)
+                settings.useWideViewPort = true
+                settings.loadWithOverviewMode = true
+                settings.builtInZoomControls = true
+                settings.displayZoomControls = false
+                settings.setSupportZoom(true)
                 loadUrl(url)
             }
 

@@ -3,7 +3,6 @@ package com.example.nuisttable
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +29,6 @@ import com.example.nuisttable.ui.theme.NUISTTableTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             NUISTTableApp()
         }
@@ -50,10 +48,9 @@ fun NUISTTableApp() {
     ) {
         if (showWebPage) {
             CreateWebView(
-//                url = "https://jwxt.nuist.edu.cn/jwapp/sys/wdkb/*default/index.do?EMAP_LANG=zh#/xskcb",
-                url = "https://authserver.nuist.edu.cn/authserver/login?service=https%3A%2F%2Fi.nuist.edu.cn%2Flogin",
+                url = "https://jwxt.nuist.edu.cn/jwapp/sys/wdkb/*default/index.do?EMAP_LANG=zh#/xskcb",
                 onClose = { showWebPage = false },
-                onLoginSeccess = { cookie ->
+                onLoginSuccess = { cookie ->
                     cookieStr = cookie
                     showWebPage = false
                 }
