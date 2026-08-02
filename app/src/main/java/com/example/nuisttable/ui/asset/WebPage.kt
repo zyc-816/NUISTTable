@@ -1,0 +1,113 @@
+package com.example.nuisttable.ui.asset
+
+
+import android.annotation.SuppressLint
+import android.net.http.SslError
+import android.util.Log
+import android.webkit.CookieManager
+import android.webkit.SslErrorHandler
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
+
+
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+fun CreateWebView(url : String, onClose : () -> Unit, onLoginSeccess : (cookie : String) -> Unit) {
+    var webView : WebView? by remember { mutableStateOf(null) }
+    var hasReturned by remember { mutableStateOf(false) }
+    BackHandler {
+        if(webView?.canGoBack() == true) webView?.goBack()
+        else onClose()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            webView?.destroy()
+            webView = null
+        }
+    }
+
+    AndroidView(
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding(),
+        factory = { context ->
+            WebView.setWebContentsDebuggingEnabled(true)
+            WebView(context).apply {
+                webView = this
+                val cookieManager = CookieManager.getInstance()
+                var ua = settings.userAgentString.replace("; wv", "")
+                cookieManager.setAcceptCookie(true)
+                cookieManager.setAcceptThirdPartyCookies(this, true)
+                webChromeClient = WebChromeClient()
+                webViewClient = object : WebViewClient() {
+                    override fun onPageFinished(view: WebView?, finUrl: String?) {
+                        super.onPageFinished(view, finUrl)
+                        if(hasReturned == true) return
+                        finUrl ?: return
+                        if(finUrl.endsWith("xskcb")) {
+                            val cookie = cookieManager.getCookie("https://jwxt.nuist.edu.cn/jwapp/sys/wdkb/*default/index.do?EMAP_LANG=zh#/xskcb")
+                            if(!cookie.isNullOrEmpty() && cookie.contains("GS_SESSIONID")) {
+                                hasReturned = true
+                                onLoginSeccess(cookie)
+                            }
+                        }
+                        Log.d("WebView", "finished: $finUrl")
+                    }
+                    override fun onReceivedSslError(
+                        view: WebView?,
+                        handler: SslErrorHandler?,
+                        error: SslError?
+                    ) {
+                        handler?.proceed()
+                    }
+                    override fun onReceivedError(
+                        view: WebView?,
+                        request: WebResourceRequest?,
+                        error: WebResourceError?
+                    ) {
+                        super.onReceivedError(view, request, error)
+                        Log.e(
+                            "WebViewError",
+                            "url=${request?.url}, isMainFrame=${request?.isForMainFrame}, code=${error?.errorCode}, desc=${error?.description}"
+                        )
+                    }
+                    override fun onReceivedHttpError(
+                        view: WebView?,
+                        request: WebResourceRequest?,
+                        errorResponse: WebResourceResponse?
+                    ) {
+                        super.onReceivedHttpError(view, request, errorResponse)
+                        Log.e(
+                            "WebViewHttp",
+                            "url=${request?.url}, isMainFrame=${request?.isForMainFrame}, code=${errorResponse?.statusCode}"
+                        )
+                    }
+
+                }
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                settings.userAgentString = ua
+                loadUrl(url)
+            }
+
+        }
+    )
+}

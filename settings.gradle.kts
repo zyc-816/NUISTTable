@@ -1,5 +1,8 @@
 pluginManagement {
     repositories {
+//        maven {
+//            setUrl("https://maven.mozilla.org/maven2/")
+//        }
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
