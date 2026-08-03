@@ -17,6 +17,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -24,7 +25,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.example.nuisttable.ui.asset.CreateWebView
+import com.example.nuisttable.ui.asset.FetchingDialog
 import com.example.nuisttable.ui.theme.NUISTTableTheme
+import com.example.nuisttable.web.requestData
+import com.example.nuisttable.web.termApi
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,7 +47,12 @@ fun NUISTTableApp() {
     var systemColorMode = isSystemInDarkTheme()
     var isDarkMode by rememberSaveable { mutableStateOf(systemColorMode) }
     var showWebPage by rememberSaveable { mutableStateOf(false) }
-    var cookieStr : String = ""
+    var cookieStr by rememberSaveable { mutableStateOf("") }
+    var showFetchingDialog by rememberSaveable { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    var termJson = ""
+
     NUISTTableTheme(
         darkTheme = isDarkMode
     ) {
@@ -52,9 +62,20 @@ fun NUISTTableApp() {
                 onClose = { showWebPage = false },
                 onLoginSuccess = { cookie ->
                     cookieStr = cookie
-                    showWebPage = false
+                    showFetchingDialog = true
+                    coroutineScope.launch {
+                        runCatching {
+                            termJson = requestData(termApi, cookie)
+                        }.onFailure {
+                        }
+                        showFetchingDialog = false
+                        showWebPage = false
+                    }
                 }
             )
+            if (showFetchingDialog) {
+                FetchingDialog()
+            }
         } else {
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
@@ -97,7 +118,7 @@ fun NUISTTableApp() {
             ) { innerPadding ->
                 Text(
                     modifier = Modifier.padding(innerPadding),
-                    text = cookieStr
+                    text = termJson
                 )
             }
 
