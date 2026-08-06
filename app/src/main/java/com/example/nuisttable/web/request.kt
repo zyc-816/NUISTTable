@@ -2,7 +2,6 @@ package com.example.nuisttable.web
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.Cookie
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -43,7 +42,7 @@ suspend fun requestData(api: Api, cookie: String): String = withContext(Dispatch
             if (!response.isSuccessful) {
                 throw IllegalStateException("HTTP ${response.code}")
             }
-            response.body?.string() ?: ""
+            response.body.string()
         }
     } catch (e: Exception) {
         throw IllegalStateException("请求\"${api.name}\"失败", e)

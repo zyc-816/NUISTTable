@@ -1,6 +1,7 @@
 package com.example.nuisttable
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -30,6 +31,7 @@ import com.example.nuisttable.ui.theme.NUISTTableTheme
 import com.example.nuisttable.web.requestData
 import com.example.nuisttable.web.termApi
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +46,7 @@ class MainActivity : ComponentActivity() {
 @PreviewScreenSizes
 @Composable
 fun NUISTTableApp() {
-    var systemColorMode = isSystemInDarkTheme()
+    val systemColorMode = isSystemInDarkTheme()
     var isDarkMode by rememberSaveable { mutableStateOf(systemColorMode) }
     var showWebPage by rememberSaveable { mutableStateOf(false) }
     var cookieStr by rememberSaveable { mutableStateOf("") }
@@ -52,6 +54,8 @@ fun NUISTTableApp() {
     val coroutineScope = rememberCoroutineScope()
 
     var termJson = ""
+    var XH: String? = ""
+    var XNXQDM = ""
 
     NUISTTableTheme(
         darkTheme = isDarkMode
@@ -60,12 +64,20 @@ fun NUISTTableApp() {
             CreateWebView(
                 url = "https://jwxt.nuist.edu.cn/jwapp/sys/wdkb/*default/index.do?EMAP_LANG=zh#/xskcb",
                 onClose = { showWebPage = false },
-                onLoginSuccess = { cookie ->
+                onLoginSuccess = { cookie,_XH ->
                     cookieStr = cookie
+                    XH = _XH
                     showFetchingDialog = true
                     coroutineScope.launch {
                         runCatching {
                             termJson = requestData(termApi, cookie)
+                            XNXQDM = JSONObject(termJson)
+                                .getJSONObject("datas")
+                                .getJSONObject("dqxnxq")
+                                .getJSONArray("rows")
+                                .getJSONObject(0)
+                                .optString("DM")
+//                            Log.d("Data", "XNXQDM: $XNXQDM")
                         }.onFailure {
                         }
                         showFetchingDialog = false
