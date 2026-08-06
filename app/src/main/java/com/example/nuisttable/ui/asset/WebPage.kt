@@ -35,7 +35,7 @@ fun FetchingDialog() {
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun CreateWebView(url : String, onClose : () -> Unit, onLoginSuccess : (cookie : String, XH : String?) -> Unit) {
+fun CreateWebView(url : String, onClose : () -> Unit, onLoginSuccess : (cookie : String, XH : String) -> Unit) {
     var webView : WebView? by remember { mutableStateOf(null) }
     var hasReturned by remember { mutableStateOf(false) }
     BackHandler {
@@ -76,7 +76,7 @@ fun CreateWebView(url : String, onClose : () -> Unit, onLoginSuccess : (cookie :
                                 }
                                 if(XH != null) {
                                     hasReturned = true
-                                    onLoginSuccess(cookie, XH)
+                                    onLoginSuccess(cookie, XH!!)
                                 }
                             }
                         }

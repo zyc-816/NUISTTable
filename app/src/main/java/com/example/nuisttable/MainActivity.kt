@@ -25,13 +25,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import com.example.nuisttable.json.data.CxxszhxqkbContent
+import com.example.nuisttable.json.data.XswpkcContent
+import com.example.nuisttable.json.getSchedule
+import com.example.nuisttable.json.getUnplaced
+import com.example.nuisttable.json.getXNXQDM
+import com.example.nuisttable.storage.data.TimetableCache
+import com.example.nuisttable.storage.saveTimetableCache
 import com.example.nuisttable.ui.asset.CreateWebView
 import com.example.nuisttable.ui.asset.FetchingDialog
 import com.example.nuisttable.ui.theme.NUISTTableTheme
 import com.example.nuisttable.web.requestData
 import com.example.nuisttable.web.termApi
+import com.example.nuisttable.web.scheduleApi
+import com.example.nuisttable.web.unplacedApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import org.json.JSONObject
+import okhttp3.internal.platform.PlatformRegistry.applicationContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,8 +64,12 @@ fun NUISTTableApp() {
     val coroutineScope = rememberCoroutineScope()
 
     var termJson = ""
-    var XH: String? = ""
+    var scheduleJson = ""
+    var unplacedJson = ""
+    var XH: String = ""
     var XNXQDM = ""
+    var scheduleList: List<CxxszhxqkbContent>? = null
+    var unplacedList: List<XswpkcContent>? = null
 
     NUISTTableTheme(
         darkTheme = isDarkMode
@@ -69,19 +83,26 @@ fun NUISTTableApp() {
                     XH = _XH
                     showFetchingDialog = true
                     coroutineScope.launch {
-                        runCatching {
+                        try {
                             termJson = requestData(termApi, cookie)
-                            XNXQDM = JSONObject(termJson)
-                                .getJSONObject("datas")
-                                .getJSONObject("dqxnxq")
-                                .getJSONArray("rows")
-                                .getJSONObject(0)
-                                .optString("DM")
+                            XNXQDM = getXNXQDM(termJson)
+                            scheduleJson = requestData(scheduleApi(XNXQDM), cookie)
+                            scheduleList = getSchedule(scheduleJson)
+                            unplacedJson = requestData(unplacedApi(XNXQDM, XH), cookie)
+                            unplacedList = getUnplaced(unplacedJson)
+                            val timetableCache = TimetableCache(XNXQDM, scheduleList, unplacedList)
+                            applicationContext?.let { saveTimetableCache(it, timetableCache) }
 //                            Log.d("Data", "XNXQDM: $XNXQDM")
-                        }.onFailure {
+//                            Log.d("Data", "scheduleList: $scheduleList")
+//                            Log.d("Data", "unplacedList: $unplacedList")
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Log.d("Data", "get data failed", e)
+                        } finally {
+                            showFetchingDialog = false
+                            showWebPage = false
                         }
-                        showFetchingDialog = false
-                        showWebPage = false
                     }
                 }
             )

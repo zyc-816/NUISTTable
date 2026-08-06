@@ -23,10 +23,10 @@ fun scheduleApi(term : String) = Api(
 )
 
 //获取未排课课程接口
-fun unplacedApi(term : String) = Api(
+fun unplacedApi(term : String, xh : String) = Api(
     name = "获取未排课课程",
     path = "/jwapp/sys/wdkb/modules/xskcb/xswpkc.do",
-    params = mapOf("XNXQDM" to term) //待获取term
+    params = mapOf("XH" to xh, "XNXQDM" to term) //待获取term,xh
 )
 
 //发起请求
