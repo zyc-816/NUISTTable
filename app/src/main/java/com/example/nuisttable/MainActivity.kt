@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ import com.example.nuisttable.storage.data.TimetableCache
 import com.example.nuisttable.storage.saveTimetableCache
 import com.example.nuisttable.ui.asset.CreateWebView
 import com.example.nuisttable.ui.asset.FetchingDialog
+import com.example.nuisttable.ui.asset.Timetable
 import com.example.nuisttable.ui.theme.NUISTTableTheme
 import com.example.nuisttable.web.requestData
 import com.example.nuisttable.web.termApi
@@ -41,7 +43,6 @@ import com.example.nuisttable.web.scheduleApi
 import com.example.nuisttable.web.unplacedApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import okhttp3.internal.platform.PlatformRegistry.applicationContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,6 +63,7 @@ fun NUISTTableApp() {
     var cookieStr by rememberSaveable { mutableStateOf("") }
     var showFetchingDialog by rememberSaveable { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val applicationContext = LocalContext.current.applicationContext
 
     var termJson = ""
     var scheduleJson = ""
@@ -91,7 +93,7 @@ fun NUISTTableApp() {
                             unplacedJson = requestData(unplacedApi(XNXQDM, XH), cookie)
                             unplacedList = getUnplaced(unplacedJson)
                             val timetableCache = TimetableCache(XNXQDM, scheduleList, unplacedList)
-                            applicationContext?.let { saveTimetableCache(it, timetableCache) }
+                            saveTimetableCache(applicationContext, timetableCache)
 //                            Log.d("Data", "XNXQDM: $XNXQDM")
 //                            Log.d("Data", "scheduleList: $scheduleList")
 //                            Log.d("Data", "unplacedList: $unplacedList")
@@ -149,10 +151,7 @@ fun NUISTTableApp() {
 
                 }
             ) { innerPadding ->
-                Text(
-                    modifier = Modifier.padding(innerPadding),
-                    text = termJson
-                )
+                Timetable(modifier = Modifier.padding(innerPadding))
             }
 
         }
