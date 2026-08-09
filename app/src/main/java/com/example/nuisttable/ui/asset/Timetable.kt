@@ -42,9 +42,12 @@ import androidx.compose.ui.unit.sp
 import com.example.nuisttable.R
 import com.example.nuisttable.json.data.CxxszhxqkbContent
 import com.example.nuisttable.json.data.XswpkcContent
+import com.example.nuisttable.json.getEvenSlot
+import com.example.nuisttable.json.getOddSlot
 import com.example.nuisttable.storage.getTimetableCache
 import com.example.nuisttable.ui.theme.CourseCardColorPreset
 import com.example.nuisttable.ui.theme.courseCardColorOf
+import java.time.Period
 
 private val weekHeaders = listOf("", "周一", "周二", "周三", "周四", "周五", "周六", "周日")
 private val timeHeaders = listOf(
@@ -57,23 +60,38 @@ private val timeHeaders = listOf(
     "第六大节\n20:35-21:20"
 )
 
+data class TimetableSlot(
+    val weekday: Int,
+    val period: Int,
+    val address: String = ""
+)
 data class TimetableCell(
     val className: String = "",
     val teacherName: String = "",
-    val address: String = "",
-    val evenWeek: Map<Int, Int> = emptyMap(),
-    val oddWeek: Map<Int, Int> = emptyMap(),
+    val weeks: String = "",
+    val evenWeek: List<TimetableSlot> = emptyList(),
+    val oddWeek: List<TimetableSlot> = emptyList(),
     val backgroundPreset: CourseCardColorPreset? = null
 )
 
-private fun parseTimetableCells(
-    scheduleList: List<CxxszhxqkbContent>?,
-    unplacedList: List<XswpkcContent>?): List<TimetableCell> {
-
-    return emptyList()
+private fun parseScheduleCells(
+    scheduleList: List<CxxszhxqkbContent>?): List<TimetableCell> {
+    var cellList: MutableList<TimetableCell> = mutableListOf<TimetableCell>()
+    scheduleList?.withIndex()?.forEach { (index, data) ->
+        var cell: TimetableCell = TimetableCell(
+            className = data.KCM,
+            teacherName = data.SKJS,
+            weeks = data.SKZC,
+            evenWeek = getEvenSlot(data.YPSJDD),
+            oddWeek = getOddSlot(data.YPSJDD),
+            backgroundPreset = CourseCardColorPreset.entries[index]
+        )
+        cellList.add(cell)
+    }
+    return cellList
 }
 
-private fun TimetableCell.currentWeekSlots(weekIndex: Int): Map<Int, Int> {
+private fun TimetableCell.currentWeekSlots(weekIndex: Int): List<TimetableSlot> {
     return if (weekIndex % 2 == 0) evenWeek else oddWeek
 }
 
@@ -116,6 +134,7 @@ private fun Modifier.timetableCellBorder(
 @Composable
 private fun TimetableCard(
     cell: TimetableCell,
+    slot: TimetableSlot,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
@@ -146,7 +165,7 @@ private fun TimetableCard(
                 style = MaterialTheme.typography.bodySmall
             )
             Text(
-                text = cell.address,
+                text = slot.address,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -205,7 +224,7 @@ fun Timetable(modifier: Modifier = Modifier) {
     val XNXQDM: String? = timetableCache?.XNXQDM
     val scheduleList = timetableCache?.scheduleList
     val unplacedList = timetableCache?.unplacedList
-    val timetableCells = parseTimetableCells(scheduleList, unplacedList)
+    val timetableCells = parseScheduleCells(scheduleList)
     var weekIndex = 1
     if (timetableCache == null) {
         Text(
@@ -276,14 +295,15 @@ fun Timetable(modifier: Modifier = Modifier) {
                 }
 
                 timetableCells.forEach { cell ->
-                    cell.currentWeekSlots(weekIndex).forEach { (weekday, period) ->
-                        if (weekday in 1..7 && period in 1..6) {
+                    cell.currentWeekSlots(weekIndex).forEach { slot ->
+                        if (slot.weekday in 1..7 && slot.period in 1..6) {
                             TimetableCard(
                                 cell = cell,
+                                slot = slot,
                                 modifier = Modifier
                                     .offset(
-                                        x = cellWidth * weekday,
-                                        y = cellHeight * period
+                                        x = cellWidth * slot.weekday,
+                                        y = cellHeight * slot.period
                                     )
                                     .width(cellWidth)
                                     .height(cellHeight),
