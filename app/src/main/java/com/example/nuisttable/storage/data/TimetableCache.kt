@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TimetableCache(
     val XNXQDM: String,
+    val XQKSRQ: String,
     val scheduleList: List<CxxszhxqkbContent>?,
     val unplacedList: List<XswpkcContent>?
 )

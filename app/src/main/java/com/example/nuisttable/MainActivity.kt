@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,12 +32,16 @@ import com.example.nuisttable.json.data.XswpkcContent
 import com.example.nuisttable.json.getSchedule
 import com.example.nuisttable.json.getUnplaced
 import com.example.nuisttable.json.getXNXQDM
+import com.example.nuisttable.json.getXQKSRQ
 import com.example.nuisttable.storage.data.TimetableCache
+import com.example.nuisttable.storage.getIsDarkMode
+import com.example.nuisttable.storage.saveIsDarkMode
 import com.example.nuisttable.storage.saveTimetableCache
 import com.example.nuisttable.ui.asset.CreateWebView
 import com.example.nuisttable.ui.asset.FetchingDialog
 import com.example.nuisttable.ui.asset.Timetable
 import com.example.nuisttable.ui.theme.NUISTTableTheme
+import com.example.nuisttable.web.beginDateApi
 import com.example.nuisttable.web.requestData
 import com.example.nuisttable.web.termApi
 import com.example.nuisttable.web.scheduleApi
@@ -58,18 +63,21 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun NUISTTableApp() {
     val systemColorMode = isSystemInDarkTheme()
-    var isDarkMode by rememberSaveable { mutableStateOf(systemColorMode) }
     var showWebPage by rememberSaveable { mutableStateOf(false) }
     var cookieStr by rememberSaveable { mutableStateOf("") }
     var showFetchingDialog by rememberSaveable { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val applicationContext = LocalContext.current.applicationContext
+    val isDarkMode by getIsDarkMode(applicationContext, systemColorMode)
+        .collectAsState(initial = systemColorMode)
 
     var termJson = ""
+    var XQKSRQJson = ""
     var scheduleJson = ""
     var unplacedJson = ""
     var XH: String = ""
     var XNXQDM = ""
+    var XQKSRQ = ""
     var scheduleList: List<CxxszhxqkbContent>? = null
     var unplacedList: List<XswpkcContent>? = null
 
@@ -88,15 +96,15 @@ fun NUISTTableApp() {
                         try {
                             termJson = requestData(termApi, cookie)
                             XNXQDM = getXNXQDM(termJson)
+                            XQKSRQJson = requestData(beginDateApi(XNXQDM.dropLast(2), XNXQDM.takeLast(1)), cookie)
+                            XQKSRQ = getXQKSRQ(XQKSRQJson)
                             scheduleJson = requestData(scheduleApi(XNXQDM), cookie)
                             scheduleList = getSchedule(scheduleJson)
                             unplacedJson = requestData(unplacedApi(XNXQDM, XH), cookie)
                             unplacedList = getUnplaced(unplacedJson)
-                            val timetableCache = TimetableCache(XNXQDM, scheduleList, unplacedList)
+                            val timetableCache = TimetableCache(XNXQDM, XQKSRQ, scheduleList, unplacedList)
                             saveTimetableCache(applicationContext, timetableCache)
-//                            Log.d("Data", "XNXQDM: $XNXQDM")
-//                            Log.d("Data", "scheduleList: $scheduleList")
-//                            Log.d("Data", "unplacedList: $unplacedList")
+//                            Log.d("DataXQKSRQ", "XQKSRQ: $XQKSRQ")
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
@@ -128,7 +136,11 @@ fun NUISTTableApp() {
                             )
                         },
                         actions = {
-                            IconButton(onClick = { isDarkMode = !isDarkMode }) {
+                            IconButton(onClick = {
+                                coroutineScope.launch {
+                                    saveIsDarkMode(applicationContext, !isDarkMode)
+                                }
+                            }) {
                                 Icon(
                                     modifier = Modifier.padding(10.dp),
                                     painter = if (isDarkMode) painterResource(R.drawable.dark_mode_icon)

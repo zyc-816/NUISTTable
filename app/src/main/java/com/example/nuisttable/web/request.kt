@@ -15,6 +15,13 @@ val termApi = Api(
     params = emptyMap()
 )
 
+//获取学期开始日期接口
+fun beginDateApi(XN: String, XQ: String) = Api(
+    name = "获取学期开始日期",
+    path = "/jwapp/sys/wdkb/modules/jshkcb/cxjcs.do",
+    params = mapOf("XN" to XN, "XQ" to XQ)
+)
+
 //获取已排课全年课表接口
 fun scheduleApi(term : String) = Api(
     name = "获取已排课课程",

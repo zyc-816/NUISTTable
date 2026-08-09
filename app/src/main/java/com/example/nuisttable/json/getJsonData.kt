@@ -17,6 +17,18 @@ fun getXNXQDM(json : String): String {
         .getJSONObject(0)
         .optString("DM")
 }
+
+fun getXQKSRQ(json: String): String {
+    val obj = JSONObject(json)
+    return obj
+        .getJSONObject("datas")
+        .getJSONObject("cxjcs")
+        .getJSONArray("rows")
+        .getJSONObject(0)
+        .optString("XQKSRQ")
+        .split(" ")[0]
+}
+
 fun getSchedule(json: String): List<CxxszhxqkbContent> {
     val jsonObj  = Json {
         ignoreUnknownKeys = true
