@@ -71,7 +71,6 @@ fun NUISTTableApp() {
     val applicationContext = LocalContext.current.applicationContext
     val isDarkMode by getIsDarkMode(applicationContext, systemColorMode)
         .collectAsState(initial = systemColorMode)
-
     var termJson: String
     var XQKSRQJson: String
     var scheduleJson: String

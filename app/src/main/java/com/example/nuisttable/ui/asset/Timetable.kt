@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -46,6 +47,7 @@ import com.example.nuisttable.json.getOddSlot
 import com.example.nuisttable.storage.getTimetableCache
 import com.example.nuisttable.ui.theme.CourseCardColorPreset
 import com.example.nuisttable.ui.theme.courseCardColorOf
+import com.example.nuisttable.ui.theme.appliedDarkTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -145,6 +147,7 @@ private fun resolveHighlightWeekday(startDateText: String?, weekIndex: Int): Int
     }
     return (daysFromStart % 7L).toInt() + 1
 }
+
 @Composable
 private fun TimetableDetailDialog(
     detail: TimetableDetail,
@@ -256,6 +259,14 @@ fun Timetable(modifier: Modifier = Modifier) {
     var selectedDetail by rememberSaveable { mutableStateOf<TimetableDetail?>(null) }
     val initialWeek = resolveInitialWeek(XQKSRQ)
     var weekIndex by rememberSaveable { mutableIntStateOf(initialWeek) }
+    val timetableIdentity = listOf(XNXQDM, XQKSRQ, scheduleList?.size, unplacedList?.size).joinToString("|")
+
+    LaunchedEffect(timetableIdentity) {
+        if (XQKSRQ != null) {
+            weekIndex = resolveInitialWeek(XQKSRQ)
+        }
+    }
+
     val highlightWeekday = resolveHighlightWeekday(XQKSRQ, weekIndex)
     if (timetableCache == null) {
         Text(
@@ -389,7 +400,11 @@ fun Timetable(modifier: Modifier = Modifier) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     val highlightHeaderColor = MaterialTheme.colorScheme.secondaryContainer
-                    val highlightCellColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    val highlightCellColor = if (appliedDarkTheme) {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    } else {
+                        MaterialTheme.colorScheme.primaryContainer
+                    }
                     val headerCellColor = MaterialTheme.colorScheme.surfaceContainerLow
                     val timeColumnColor = MaterialTheme.colorScheme.surfaceContainerLow
                     val defaultCellColor = MaterialTheme.colorScheme.surface

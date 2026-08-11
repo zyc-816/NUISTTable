@@ -9,7 +9,13 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+
+val LocalAppliedDarkTheme = staticCompositionLocalOf { false }
+
+val appliedDarkTheme: Boolean
+    @Composable get() = LocalAppliedDarkTheme.current
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -53,7 +59,8 @@ fun NUISTTableTheme(
     val courseCardPalette = if (darkTheme) DarkCourseCardPalette else LightCourseCardPalette
 
     CompositionLocalProvider(
-        LocalCourseCardPalette provides courseCardPalette
+        LocalCourseCardPalette provides courseCardPalette,
+        LocalAppliedDarkTheme provides darkTheme
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
