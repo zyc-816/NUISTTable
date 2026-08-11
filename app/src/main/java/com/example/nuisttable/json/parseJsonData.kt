@@ -1,16 +1,15 @@
 package com.example.nuisttable.json
 
 import com.example.nuisttable.ui.asset.TimetableSlot
-import okhttp3.internal.http.HTTP_CONTINUE
 
 fun getEvenSlot(data: String): List<TimetableSlot> {
     val strList: List<String> = data.split(",")
-    var res: MutableList<TimetableSlot> = mutableListOf<TimetableSlot>()
+    val res: MutableList<TimetableSlot> = mutableListOf()
     strList.forEach { str ->
         val (week, weekDay, period, addr) = str.split(" ")
         if(week.contains("单")) {}
         else {
-            val slot: TimetableSlot = TimetableSlot(
+            val slot = TimetableSlot(
                 weekday = when (weekDay) {
                     "星期一" -> 1
                     "星期二" -> 2
@@ -40,12 +39,12 @@ fun getEvenSlot(data: String): List<TimetableSlot> {
 
 fun getOddSlot(data: String): List<TimetableSlot> {
     val strList: List<String> = data.split(",")
-    var res: MutableList<TimetableSlot> = mutableListOf<TimetableSlot>()
+    val res: MutableList<TimetableSlot> = mutableListOf()
     strList.forEach { str ->
         val (week, weekDay, period, addr) = str.split(" ")
         if(week.contains("双")) {}
         else {
-            val slot: TimetableSlot = TimetableSlot(
+            val slot = TimetableSlot(
                 weekday = when (weekDay) {
                     "星期一" -> 1
                     "星期二" -> 2

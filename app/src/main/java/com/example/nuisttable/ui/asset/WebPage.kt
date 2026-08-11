@@ -1,12 +1,8 @@
 package com.example.nuisttable.ui.asset
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -38,13 +34,31 @@ fun FetchingDialog() {
 fun CreateWebView(url : String, onClose : () -> Unit, onLoginSuccess : (cookie : String, XH : String) -> Unit) {
     var webView : WebView? by remember { mutableStateOf(null) }
     var hasReturned by remember { mutableStateOf(false) }
+    var hasClosed by remember { mutableStateOf(false) }
+
+    fun clearWebViewState(view: WebView?) {
+        view ?: return
+        view.stopLoading()
+        view.clearHistory()
+        view.clearFormData()
+        view.clearCache(true)
+    }
+
+    fun closeWebView() {
+        if (hasClosed) return
+        hasClosed = true
+        clearWebViewState(webView)
+        onClose()
+    }
+
     BackHandler {
         if(webView?.canGoBack() == true) webView?.goBack()
-        else onClose()
+        else closeWebView()
     }
 
     DisposableEffect(Unit) {
         onDispose {
+            clearWebViewState(webView)
             webView?.destroy()
             webView = null
         }
@@ -69,43 +83,18 @@ fun CreateWebView(url : String, onClose : () -> Unit, onLoginSuccess : (cookie :
                         if(finUrl.endsWith("xskcb")) {
                             val cookie = cookieManager.getCookie("https://jwxt.nuist.edu.cn/jwapp/sys/wdkb/*default/index.do?EMAP_LANG=zh#/xskcb")
                             if(!cookie.isNullOrEmpty() && cookie.contains("GS_SESSIONID")) {
-                                var XH: String? = ""
                                 view?.evaluateJavascript("(function(){ return typeof userId !== 'undefined' ? userId : null; })();") { value ->
-                                    XH = value?.removeSurrounding("\"")
-//                                    Log.d("Data", "XH: $XH")
-                                }
-                                if(XH != null) {
+                                    val xh = value
+                                        ?.removeSurrounding("\"")
+                                        ?.takeIf { it.isNotBlank() && it != "null" }
+                                        ?: return@evaluateJavascript
+                                    if (hasReturned) return@evaluateJavascript
                                     hasReturned = true
-                                    onLoginSuccess(cookie, XH!!)
+                                    onLoginSuccess(cookie, xh)
                                 }
                             }
                         }
-//                        Log.d("WebView", "finished: $finUrl")
                     }
-
-//                    override fun onReceivedError(
-//                        view: WebView?,
-//                        request: WebResourceRequest?,
-//                        error: WebResourceError?
-//                    ) {
-//                        super.onReceivedError(view, request, error)
-//                        Log.e(
-//                            "WebViewError",
-//                            "url=${request?.url}, isMainFrame=${request?.isForMainFrame}, code=${error?.errorCode}, desc=${error?.description}"
-//                        )
-//                    }
-//
-//                    override fun onReceivedHttpError(
-//                        view: WebView?,
-//                        request: WebResourceRequest?,
-//                        errorResponse: WebResourceResponse?
-//                    ) {
-//                        super.onReceivedHttpError(view, request, errorResponse)
-//                        Log.e(
-//                            "WebViewHttp",
-//                            "url=${request?.url}, isMainFrame=${request?.isForMainFrame}, code=${errorResponse?.statusCode}, mime=${errorResponse?.mimeType}, reason=${errorResponse?.reasonPhrase}"
-//                        )
-//                    }
                 }
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true

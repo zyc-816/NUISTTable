@@ -1,8 +1,5 @@
 package com.example.nuisttable.ui.asset
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -11,29 +8,31 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -85,9 +84,10 @@ data class TimetableDetail(
 
 private fun parseScheduleCells(
     scheduleList: List<CxxszhxqkbContent>?): List<TimetableCell> {
-    var cellList: MutableList<TimetableCell> = mutableListOf<TimetableCell>()
-    scheduleList?.withIndex()?.forEach { (index, data) ->
-        var cell: TimetableCell = TimetableCell(
+    val cellList = mutableListOf<TimetableCell>()
+    scheduleList?.withIndex()?.forEach { (_index, data) ->
+        val index = _index % 15
+        val cell = TimetableCell(
             className = data.KCM,
             teacherName = data.SKJS,
             weeks = data.SKZC,
@@ -145,51 +145,6 @@ private fun resolveHighlightWeekday(startDateText: String?, weekIndex: Int): Int
     }
     return (daysFromStart % 7L).toInt() + 1
 }
-
-private fun Modifier.timetableCellBorder(
-    rowIndex: Int,
-    columnIndex: Int,
-    borderColor: Color
-): Modifier = drawBehind {
-    val innerStroke = 2.dp.toPx()
-    val outerStroke = 2.dp.toPx()
-    val widthPx = size.width
-    val heightPx = size.height
-
-    drawLine(
-        color = borderColor,
-        start = Offset(0f, 0f),
-        end = Offset(widthPx, 0f),
-        strokeWidth = if (rowIndex == 0) outerStroke else innerStroke
-    )
-    drawLine(
-        color = borderColor,
-        start = Offset(0f, 0f),
-        end = Offset(0f, heightPx),
-        strokeWidth = if (columnIndex == 0) outerStroke else innerStroke
-    )
-    drawLine(
-        color = borderColor,
-        start = Offset(widthPx, 0f),
-        end = Offset(widthPx, heightPx),
-        strokeWidth = if (columnIndex == 7) outerStroke else innerStroke
-    )
-    drawLine(
-        color = borderColor,
-        start = Offset(0f, heightPx),
-        end = Offset(widthPx, heightPx),
-        strokeWidth = if (rowIndex == 6) outerStroke else innerStroke
-    )
-}
-
-private fun weekdayDisplayText(weekday: Int): String {
-    return weekHeaders.getOrElse(weekday) { "" }
-}
-
-private fun periodDisplayText(period: Int): String {
-    return timeHeaders.getOrElse(period) { "" }
-}
-
 @Composable
 private fun TimetableDetailDialog(
     detail: TimetableDetail,
@@ -198,17 +153,44 @@ private fun TimetableDetailDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = detail.cell.className)
+            Text(
+                text = detail.cell.className,
+                style = MaterialTheme.typography.titleLarge
+            )
         },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(text = "教师：${detail.cell.teacherName}")
-                Text(text = "地点：${detail.slot.address}")
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "教师",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = detail.cell.teacherName,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "地点",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = detail.slot.address,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
         },
-        confirmButton = {}
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text(text = "关闭")
+            }
+        }
     )
 }
 
@@ -220,34 +202,44 @@ private fun TimetableCard(
     textFontSize: androidx.compose.ui.unit.TextUnit,
     onClick: () -> Unit = {}
 ) {
-    Box(
-        modifier = modifier
-            .padding(2.dp)
-            .background(
-                cell.backgroundPreset?.let { courseCardColorOf(it) }
-                    ?: MaterialTheme.colorScheme.surfaceContainerHigh
-            )
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+    val compactLineHeight = (textFontSize.value * 1.05f).coerceAtLeast(7.5f).sp
+    Card(
+        modifier = modifier,
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = cell.backgroundPreset?.let { courseCardColorOf(it) }
+                ?: MaterialTheme.colorScheme.surfaceContainerHigh
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 2.dp, vertical = 2.dp),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = cell.className,
                 textAlign = TextAlign.Center,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = textFontSize)
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontSize = textFontSize,
+                    lineHeight = compactLineHeight
+                )
             )
             Text(
                 text = slot.address,
                 textAlign = TextAlign.Center,
                 maxLines = 3,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = textFontSize)
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontSize = textFontSize,
+                    lineHeight = compactLineHeight
+                )
             )
         }
     }
@@ -263,7 +255,7 @@ fun Timetable(modifier: Modifier = Modifier) {
     val timetableCells = parseScheduleCells(scheduleList)
     var selectedDetail by rememberSaveable { mutableStateOf<TimetableDetail?>(null) }
     val initialWeek = resolveInitialWeek(XQKSRQ)
-    var weekIndex by rememberSaveable { mutableStateOf(initialWeek) }
+    var weekIndex by rememberSaveable { mutableIntStateOf(initialWeek) }
     val highlightWeekday = resolveHighlightWeekday(XQKSRQ, weekIndex)
     if (timetableCache == null) {
         Text(
@@ -284,135 +276,209 @@ fun Timetable(modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            modifier = Modifier
-                .wrapContentSize()
-                .heightIn(0.dp, 20.dp),
-            text = "学期：${XNXQDM}",
-            style = MaterialTheme.typography.titleSmall
-        )
-        Box(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentSize()
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            tonalElevation = 2.dp
         ) {
-            Row(
-                modifier = Modifier.align(Alignment.Center)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                IconButton(onClick = { weekIndex = when(weekIndex) {
-                    1 -> 20
-                    else -> weekIndex - 1
-                } }) {
-                    Icon(
-                        modifier = Modifier.padding(10.dp),
-                        painter = painterResource(R.drawable.arrow_back),
-                        contentDescription = "上一周"
-                    )
-                }
-                Box(
-                    modifier = Modifier.height(48.dp),
-                    contentAlignment = Alignment.Center
+                Row(
+                    modifier = Modifier
+                        .wrapContentHeight()
                 ) {
                     Text(
-                        text = "第${weekIndex}周"
+                        text = "学期：",
+                        modifier = Modifier.wrapContentHeight(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = XNXQDM ?: "--",
+                        modifier = Modifier.wrapContentHeight(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                IconButton(onClick = { weekIndex = weekIndex%20 + 1 }) {
-                    Icon(
-                        modifier = Modifier.padding(10.dp),
-                        painter = painterResource(R.drawable.arrow_forward),
-                        contentDescription = "下一周"
-                    )
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 1.dp
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        IconButton(onClick = { weekIndex = when(weekIndex) {
+                            1 -> 20
+                            else -> weekIndex - 1
+                        } }) {
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_back),
+                                contentDescription = "上一周"
+                            )
+                        }
+                        Column(
+                            modifier = Modifier.wrapContentHeight(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(1.dp)
+                        ) {
+
+                            Text(
+                                text = "第${weekIndex}周",
+                                modifier = Modifier.wrapContentHeight(),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        IconButton(onClick = { weekIndex = weekIndex%20 + 1 }) {
+                            Icon(
+                                painter = painterResource(R.drawable.arrow_forward),
+                                contentDescription = "下一周"
+                            )
+                        }
+                    }
                 }
             }
         }
 
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth()
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLowest,
+            tonalElevation = 1.dp,
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant
+            )
         ) {
-            val cellWidth = maxWidth / 8
-            val cellHeight = (cellWidth * 1.1f).coerceIn(64.dp, 96.dp)
-            val headerFontSize = (cellWidth.value * 0.22f).coerceIn(10f, 14f).sp
-            val timeFontSize = (cellWidth.value * 0.15f).coerceIn(7f, 10f).sp
-            val cardTextFontSize = (cellHeight.value * 0.12f).coerceIn(6.5f, 10f).sp
-
-            Box(
-                modifier = Modifier.fillMaxWidth()
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
             ) {
-                val highlightCellColor = MaterialTheme.colorScheme.primaryContainer
-                val defaultCellColor = MaterialTheme.colorScheme.surface
-                Column(
+                val cellSpacing = 4.dp
+                val totalHorizontalSpacing = cellSpacing * 7
+                val totalVerticalSpacing = cellSpacing * 6
+                val cellWidth = (maxWidth - totalHorizontalSpacing) / 8
+                val gridHeight = maxWidth / 8 * 7
+                val cellHeight = ((gridHeight - totalVerticalSpacing) / 7).coerceIn(64.dp, 96.dp)
+                val headerFontSize = (cellWidth.value * 0.22f).coerceIn(10f, 14f).sp
+                val timeFontSize = (cellWidth.value * 0.15f).coerceIn(7f, 10f).sp
+                val cardTextFontSize = (cellHeight.value * 0.12f).coerceIn(6.5f, 10f).sp
+
+                Box(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    repeat(7) { rowIndex ->
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            repeat(8) { columnIndex ->
-                                val cellText = when {
-                                    rowIndex == 0 && columnIndex != 0 -> weekdayHeaderText(
-                                        startDateText = XQKSRQ,
-                                        weekIndex = weekIndex,
-                                        weekday = columnIndex
-                                    )
-                                    columnIndex == 0 -> timeHeaders[rowIndex]
-                                    else -> ""
-                                }
-                                val fontSize = when {
-                                    rowIndex == 0 && columnIndex != 0 -> headerFontSize
-                                    columnIndex == 0 -> timeFontSize
-                                    else -> headerFontSize
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .width(cellWidth)
-                                        .height(cellHeight)
-                                        .background(
-                                            if (columnIndex != 0 && columnIndex == highlightWeekday) {
-                                                highlightCellColor
-                                            } else {
-                                                defaultCellColor
-                                            }
+                    val highlightHeaderColor = MaterialTheme.colorScheme.secondaryContainer
+                    val highlightCellColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                    val headerCellColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    val timeColumnColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    val defaultCellColor = MaterialTheme.colorScheme.surface
+                    val cellShape = RoundedCornerShape(8.dp)
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(cellSpacing)
+                    ) {
+                        repeat(7) { rowIndex ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(cellSpacing)
+                            ) {
+                                repeat(8) { columnIndex ->
+                                    val cellText = when {
+                                        rowIndex == 0 && columnIndex != 0 -> weekdayHeaderText(
+                                            startDateText = XQKSRQ,
+                                            weekIndex = weekIndex,
+                                            weekday = columnIndex
                                         )
-                                        .timetableCellBorder(
-                                            rowIndex = rowIndex,
-                                            columnIndex = columnIndex,
-                                            borderColor = MaterialTheme.colorScheme.outlineVariant
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = cellText,
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = fontSize)
-                                    )
+                                        columnIndex == 0 -> timeHeaders[rowIndex]
+                                        else -> ""
+                                    }
+                                    val fontSize = when {
+                                        rowIndex == 0 && columnIndex != 0 -> headerFontSize
+                                        columnIndex == 0 -> timeFontSize
+                                        else -> headerFontSize
+                                    }
+                                    val cellColor = when {
+                                        rowIndex == 0 && columnIndex == 0 -> timeColumnColor
+                                        rowIndex == 0 && columnIndex == highlightWeekday -> highlightHeaderColor
+                                        rowIndex == 0 -> headerCellColor
+                                        columnIndex == 0 -> timeColumnColor
+                                        columnIndex == highlightWeekday -> highlightCellColor
+                                        else -> defaultCellColor
+                                    }
+
+                                    Surface(
+                                        modifier = Modifier
+                                            .width(cellWidth)
+                                            .height(cellHeight),
+                                        shape = cellShape,
+                                        color = cellColor,
+                                        tonalElevation = if (rowIndex == 0 || columnIndex == 0) 1.dp else 0.dp
+                                    ) {
+                                        Box(
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = cellText,
+                                                textAlign = TextAlign.Center,
+                                                color = if (rowIndex == 0 || columnIndex == 0) {
+                                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurface
+                                                },
+                                                style = if (rowIndex == 0 && columnIndex != 0) {
+                                                    MaterialTheme.typography.labelMedium.copy(fontSize = fontSize)
+                                                } else {
+                                                    MaterialTheme.typography.bodyMedium.copy(fontSize = fontSize)
+                                                }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                timetableCells.forEach { cell ->
-                    if (cell.weeks.getOrNull(weekIndex - 1) == '1') {
-                        cell.currentWeekSlots(weekIndex).forEach { slot ->
-                            if (slot.weekday in 1..7 && slot.period in 1..6) {
-                                TimetableCard(
-                                    cell = cell,
-                                    slot = slot,
-                                    modifier = Modifier
-                                        .offset(
-                                            x = cellWidth * slot.weekday,
-                                            y = cellHeight * slot.period
-                                        )
-                                        .width(cellWidth)
-                                        .height(cellHeight),
-                                    textFontSize = cardTextFontSize,
-                                    onClick = {
-                                        selectedDetail = TimetableDetail(cell = cell, slot = slot)
-                                    }
-                                )
+                    timetableCells.forEach { cell ->
+                        if (cell.weeks.getOrNull(weekIndex - 1) == '1') {
+                            cell.currentWeekSlots(weekIndex).forEach { slot ->
+                                if (slot.weekday in 1..7 && slot.period in 1..6) {
+                                    TimetableCard(
+                                        cell = cell,
+                                        slot = slot,
+                                        modifier = Modifier
+                                            .offset(
+                                                x = (cellWidth + cellSpacing) * slot.weekday,
+                                                y = (cellHeight + cellSpacing) * slot.period
+                                            )
+                                            .width(cellWidth)
+                                            .height(cellHeight),
+                                        textFontSize = cardTextFontSize,
+                                        onClick = {
+                                            selectedDetail = TimetableDetail(cell = cell, slot = slot)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

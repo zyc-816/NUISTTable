@@ -61,39 +61,39 @@ data class CourseCardPalette(
 }
 
 val LightCourseCardPalette = CourseCardPalette(
-    rose = Color(0xFFF4D7E2),
-    coral = Color(0xFFF8D8D1),
-    orange = Color(0xFFF8E0C7),
-    amber = Color(0xFFF6E7BA),
-    lime = Color(0xFFE9EDC5),
-    green = Color(0xFFDDEED6),
-    emerald = Color(0xFFD2EDE2),
-    teal = Color(0xFFD2EBEA),
-    cyan = Color(0xFFD7EBF1),
-    sky = Color(0xFFDCEAF8),
-    blue = Color(0xFFDCE4F6),
-    indigo = Color(0xFFE0E0F4),
-    violet = Color(0xFFE8DDF4),
-    purple = Color(0xFFEEDAF4),
-    pink = Color(0xFFF4D8EC)
+    rose = Color(0xFFF0CDD7),
+    coral = Color(0xFFF3D0C4),
+    orange = Color(0xFFF4D8BF),
+    amber = Color(0xFFF4E0B8),
+    lime = Color(0xFFE7E4BA),
+    green = Color(0xFFD5E7CC),
+    emerald = Color(0xFFCCE7DA),
+    teal = Color(0xFFCBE4E2),
+    cyan = Color(0xFFCEE3EA),
+    sky = Color(0xFFD2E3F0),
+    blue = Color(0xFFD1DCF0),
+    indigo = Color(0xFFD9D8EE),
+    violet = Color(0xFFE0D6EE),
+    purple = Color(0xFFE7D3EB),
+    pink = Color(0xFFF0D0E1)
 )
 
 val DarkCourseCardPalette = CourseCardPalette(
-    rose = Color(0xFF5B3F4A),
-    coral = Color(0xFF65443E),
-    orange = Color(0xFF6A4B39),
-    amber = Color(0xFF655437),
-    lime = Color(0xFF56603A),
-    green = Color(0xFF445A40),
-    emerald = Color(0xFF3F5A4D),
-    teal = Color(0xFF3D5957),
-    cyan = Color(0xFF405762),
-    sky = Color(0xFF415769),
-    blue = Color(0xFF424F68),
-    indigo = Color(0xFF474A67),
-    violet = Color(0xFF514867),
-    purple = Color(0xFF574663),
-    pink = Color(0xFF5D4358)
+    rose = Color(0xFF6A4853),
+    coral = Color(0xFF705046),
+    orange = Color(0xFF76573F),
+    amber = Color(0xFF746038),
+    lime = Color(0xFF61633C),
+    green = Color(0xFF4B6048),
+    emerald = Color(0xFF456257),
+    teal = Color(0xFF42615F),
+    cyan = Color(0xFF47606A),
+    sky = Color(0xFF4B6172),
+    blue = Color(0xFF4C5D73),
+    indigo = Color(0xFF56596F),
+    violet = Color(0xFF5C5770),
+    purple = Color(0xFF63556E),
+    pink = Color(0xFF6A5467)
 )
 
 val LocalCourseCardPalette = staticCompositionLocalOf { LightCourseCardPalette }

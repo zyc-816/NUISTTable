@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,15 +72,15 @@ fun NUISTTableApp() {
     val isDarkMode by getIsDarkMode(applicationContext, systemColorMode)
         .collectAsState(initial = systemColorMode)
 
-    var termJson = ""
-    var XQKSRQJson = ""
-    var scheduleJson = ""
-    var unplacedJson = ""
-    var XH: String = ""
-    var XNXQDM = ""
-    var XQKSRQ = ""
-    var scheduleList: List<CxxszhxqkbContent>? = null
-    var unplacedList: List<XswpkcContent>? = null
+    var termJson: String
+    var XQKSRQJson: String
+    var scheduleJson: String
+    var unplacedJson: String
+    var XH: String
+    var XNXQDM: String
+    var XQKSRQ: String
+    var scheduleList: List<CxxszhxqkbContent>?
+    var unplacedList: List<XswpkcContent>?
 
     NUISTTableTheme(
         darkTheme = isDarkMode
@@ -104,7 +105,6 @@ fun NUISTTableApp() {
                             unplacedList = getUnplaced(unplacedJson)
                             val timetableCache = TimetableCache(XNXQDM, XQKSRQ, scheduleList, unplacedList)
                             saveTimetableCache(applicationContext, timetableCache)
-//                            Log.d("DataXQKSRQ", "XQKSRQ: $XQKSRQ")
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
@@ -124,6 +124,7 @@ fun NUISTTableApp() {
                 modifier = Modifier.fillMaxSize(),
                 topBar = {
                     TopAppBar(
+                        modifier = Modifier.wrapContentHeight(),
                         title = {
                             Text(text = "课表")
                         },

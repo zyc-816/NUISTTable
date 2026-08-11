@@ -11,9 +11,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.example.nuisttable.storage.data.TimetableCache
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.IOException
 
@@ -56,21 +54,6 @@ fun getIsDarkMode(context: Context, defaultValue: Boolean): Flow<Boolean> {
         .map { preferences ->
             preferences[IS_DARK_MODE_KEY] ?: defaultValue
         }
-}
-
-suspend fun hasTimetableCache(context: Context): Boolean {
-    return context.dataStore.data
-        .catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
-        }
-        .map { preferences ->
-            !preferences[TIMETABLE_CACHE_KEY].isNullOrBlank()
-        }
-        .first()
 }
 
 suspend fun saveTimetableCache(context: Context, cache: TimetableCache) {
