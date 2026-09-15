@@ -31,7 +31,7 @@ fun FetchingDialog() {
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun CreateWebView(url : String, onClose : () -> Unit, onLoginSuccess : (cookie : String, XH : String) -> Unit) {
+fun CreateWebView(url : String, onClose : () -> Unit, onLoginSuccess : (cookie: String) -> Unit) {
     var webView : WebView? by remember { mutableStateOf(null) }
     var hasReturned by remember { mutableStateOf(false) }
     var hasClosed by remember { mutableStateOf(false) }
@@ -83,14 +83,10 @@ fun CreateWebView(url : String, onClose : () -> Unit, onLoginSuccess : (cookie :
                         if(finUrl.endsWith("xskcb")) {
                             val cookie = cookieManager.getCookie("https://jwxt.nuist.edu.cn/jwapp/sys/wdkb/*default/index.do?EMAP_LANG=zh#/xskcb")
                             if(!cookie.isNullOrEmpty() && cookie.contains("GS_SESSIONID")) {
-                                view?.evaluateJavascript("(function(){ return typeof userId !== 'undefined' ? userId : null; })();") { value ->
-                                    val xh = value
-                                        ?.removeSurrounding("\"")
-                                        ?.takeIf { it.isNotBlank() && it != "null" }
-                                        ?: return@evaluateJavascript
+                                view?.evaluateJavascript("(function(){ return typeof userId !== 'undefined' ? userId : null; })();") { _ ->
                                     if (hasReturned) return@evaluateJavascript
                                     hasReturned = true
-                                    onLoginSuccess(cookie, xh)
+                                    onLoginSuccess(cookie)
                                 }
                             }
                         }

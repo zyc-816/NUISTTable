@@ -29,13 +29,6 @@ fun scheduleApi(term : String, week: String) = Api(
     params = mapOf("XNXQDM" to term, "SKZC" to week) //待获取term
 )
 
-//获取未排课课程接口
-fun unplacedApi(term : String, xh : String) = Api(
-    name = "获取未排课课程",
-    path = "/jwapp/sys/wdkb/modules/xskcb/xswpkc.do",
-    params = mapOf("XH" to xh, "XNXQDM" to term) //待获取term,xh
-)
-
 //发起请求
 suspend fun requestData(api: Api, cookie: String): String = withContext(Dispatchers.IO) {
     try {
