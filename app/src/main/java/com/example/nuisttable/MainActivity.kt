@@ -29,9 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.example.nuisttable.json.data.CxxszhxqkbContent
-import com.example.nuisttable.json.data.XswpkcContent
 import com.example.nuisttable.json.getSchedule
-import com.example.nuisttable.json.getUnplaced
 import com.example.nuisttable.json.getXNXQDM
 import com.example.nuisttable.json.getXQKSRQ
 import com.example.nuisttable.storage.data.TimetableCache
@@ -44,13 +42,10 @@ import com.example.nuisttable.ui.asset.Timetable
 import com.example.nuisttable.ui.theme.NUISTTableTheme
 import com.example.nuisttable.web.beginDateApi
 import com.example.nuisttable.web.requestData
-import com.example.nuisttable.web.termApi
 import com.example.nuisttable.web.scheduleApi
-import com.example.nuisttable.web.unplacedApi
+import com.example.nuisttable.web.termApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,14 +68,6 @@ fun NUISTTableApp() {
     val applicationContext = LocalContext.current.applicationContext
     val isDarkMode by getIsDarkMode(applicationContext, systemColorMode)
         .collectAsState(initial = systemColorMode)
-    var termJson: String
-    var XQKSRQJson: String
-    var scheduleJson: String
-//    var unplacedJson: String
-//    var XH: String
-    var XNXQDM: String
-    var XQKSRQ: String
-    var scheduleList: List<List<CxxszhxqkbContent>>?
 
     NUISTTableTheme(
         darkTheme = isDarkMode
@@ -89,29 +76,24 @@ fun NUISTTableApp() {
             CreateWebView(
                 url = "https://jwxt.nuist.edu.cn/jwapp/sys/wdkb/*default/index.do?EMAP_LANG=zh#/xskcb",
                 onClose = { showWebPage = false },
-                onLoginSuccess = { cookie,_XH ->
+                onLoginSuccess = { cookie ->
                     cookieStr = cookie
-//                    XH = _XH
                     showFetchingDialog = true
                     coroutineScope.launch {
                         try {
                             //获取学年学期代码
-                            termJson = requestData(termApi, cookie)
-                            XNXQDM = getXNXQDM(termJson)
+                            val termJson = requestData(termApi, cookie)
+                            val XNXQDM = getXNXQDM(termJson)
                             //获取学期开始日期
-                            XQKSRQJson = requestData(beginDateApi(XNXQDM.dropLast(2), XNXQDM.takeLast(1)), cookie)
-                            XQKSRQ = getXQKSRQ(XQKSRQJson)
-                            //已排课课程信息（遍历1-20周，按周合并）
+                            val XQKSRQJson = requestData(beginDateApi(XNXQDM.dropLast(2), XNXQDM.takeLast(1)), cookie)
+                            val XQKSRQ = getXQKSRQ(XQKSRQJson)
+                            //已排课课程信息（按周获取）
                             val scheduleList = mutableListOf<List<CxxszhxqkbContent>>()
                             for (week in 1..20) {
                                 val weekJson = requestData(scheduleApi(XNXQDM, week.toString()), cookie)
-//                                Log.d("Data", "week $week: $weekJson")
                                 val weekData = getSchedule(weekJson)
                                 scheduleList.add(weekData)
                             }
-                            //未排课课程信息
-//                            unplacedJson = requestData(unplacedApi(XNXQDM, XH), cookie)
-//                            unplacedList = getUnplaced(unplacedJson)
                             //课表数据
                             val timetableCache = TimetableCache(XNXQDM, XQKSRQ, scheduleList)
                             saveTimetableCache(applicationContext, timetableCache)
@@ -170,9 +152,7 @@ fun NUISTTableApp() {
                         }
                     )
                 },
-                bottomBar = {
-
-                }
+                bottomBar = { }
             ) { innerPadding ->
                 Timetable(modifier = Modifier.padding(innerPadding))
             }

@@ -42,12 +42,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nuisttable.R
 import com.example.nuisttable.json.data.CxxszhxqkbContent
-import com.example.nuisttable.json.getEvenSlot
-import com.example.nuisttable.json.getOddSlot
 import com.example.nuisttable.storage.getTimetableCache
 import com.example.nuisttable.ui.theme.CourseCardColorPreset
-import com.example.nuisttable.ui.theme.courseCardColorOf
 import com.example.nuisttable.ui.theme.appliedDarkTheme
+import com.example.nuisttable.ui.theme.courseCardColorOf
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
