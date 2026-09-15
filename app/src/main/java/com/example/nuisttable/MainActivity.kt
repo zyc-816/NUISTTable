@@ -49,6 +49,8 @@ import com.example.nuisttable.web.scheduleApi
 import com.example.nuisttable.web.unplacedApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,12 +76,11 @@ fun NUISTTableApp() {
     var termJson: String
     var XQKSRQJson: String
     var scheduleJson: String
-    var unplacedJson: String
-    var XH: String
+//    var unplacedJson: String
+//    var XH: String
     var XNXQDM: String
     var XQKSRQ: String
-    var scheduleList: List<CxxszhxqkbContent>?
-    var unplacedList: List<XswpkcContent>?
+    var scheduleList: List<List<CxxszhxqkbContent>>?
 
     NUISTTableTheme(
         darkTheme = isDarkMode
@@ -90,19 +91,29 @@ fun NUISTTableApp() {
                 onClose = { showWebPage = false },
                 onLoginSuccess = { cookie,_XH ->
                     cookieStr = cookie
-                    XH = _XH
+//                    XH = _XH
                     showFetchingDialog = true
                     coroutineScope.launch {
                         try {
+                            //获取学年学期代码
                             termJson = requestData(termApi, cookie)
                             XNXQDM = getXNXQDM(termJson)
+                            //获取学期开始日期
                             XQKSRQJson = requestData(beginDateApi(XNXQDM.dropLast(2), XNXQDM.takeLast(1)), cookie)
                             XQKSRQ = getXQKSRQ(XQKSRQJson)
-                            scheduleJson = requestData(scheduleApi(XNXQDM), cookie)
-                            scheduleList = getSchedule(scheduleJson)
-                            unplacedJson = requestData(unplacedApi(XNXQDM, XH), cookie)
-                            unplacedList = getUnplaced(unplacedJson)
-                            val timetableCache = TimetableCache(XNXQDM, XQKSRQ, scheduleList, unplacedList)
+                            //已排课课程信息（遍历1-20周，按周合并）
+                            val scheduleList = mutableListOf<List<CxxszhxqkbContent>>()
+                            for (week in 1..20) {
+                                val weekJson = requestData(scheduleApi(XNXQDM, week.toString()), cookie)
+//                                Log.d("Data", "week $week: $weekJson")
+                                val weekData = getSchedule(weekJson)
+                                scheduleList.add(weekData)
+                            }
+                            //未排课课程信息
+//                            unplacedJson = requestData(unplacedApi(XNXQDM, XH), cookie)
+//                            unplacedList = getUnplaced(unplacedJson)
+                            //课表数据
+                            val timetableCache = TimetableCache(XNXQDM, XQKSRQ, scheduleList)
                             saveTimetableCache(applicationContext, timetableCache)
                         } catch (e: CancellationException) {
                             throw e

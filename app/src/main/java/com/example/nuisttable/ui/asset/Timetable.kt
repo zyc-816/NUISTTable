@@ -73,9 +73,9 @@ data class TimetableSlot(
 data class TimetableCell(
     val className: String = "",
     val teacherName: String = "",
-    val weeks: String = "",
-    val evenWeek: List<TimetableSlot> = emptyList(),
-    val oddWeek: List<TimetableSlot> = emptyList(),
+    val weekDay: Int = 0,
+    val time: Int = 0,
+    val addr: String = "",
     val backgroundPreset: CourseCardColorPreset? = null
 )
 
@@ -92,18 +92,14 @@ private fun parseScheduleCells(
         val cell = TimetableCell(
             className = data.KCM,
             teacherName = data.SKJS,
-            weeks = data.SKZC,
-            evenWeek = getEvenSlot(data.YPSJDD),
-            oddWeek = getOddSlot(data.YPSJDD),
+            weekDay = data.SKXQ,
+            time = data.JSJC.toInt() / 2,
+            addr = data.JASMC,
             backgroundPreset = CourseCardColorPreset.entries[index]
         )
         cellList.add(cell)
     }
     return cellList
-}
-
-private fun TimetableCell.currentWeekSlots(weekIndex: Int): List<TimetableSlot> {
-    return if (weekIndex % 2 == 0) evenWeek else oddWeek
 }
 
 private fun weekdayHeaderText(
@@ -254,12 +250,10 @@ fun Timetable(modifier: Modifier = Modifier) {
     val XNXQDM: String? = timetableCache?.XNXQDM
     val XQKSRQ: String? = timetableCache?.XQKSRQ
     val scheduleList = timetableCache?.scheduleList
-    val unplacedList = timetableCache?.unplacedList
-    val timetableCells = parseScheduleCells(scheduleList)
     var selectedDetail by rememberSaveable { mutableStateOf<TimetableDetail?>(null) }
     val initialWeek = resolveInitialWeek(XQKSRQ)
     var weekIndex by rememberSaveable { mutableIntStateOf(initialWeek) }
-    val timetableIdentity = listOf(XNXQDM, XQKSRQ, scheduleList?.size, unplacedList?.size).joinToString("|")
+    val timetableIdentity = listOf(XNXQDM, XQKSRQ, scheduleList?.size).joinToString("|")
 
     LaunchedEffect(timetableIdentity) {
         if (XQKSRQ != null) {
@@ -474,27 +468,25 @@ fun Timetable(modifier: Modifier = Modifier) {
                         }
                     }
 
+                    val timetableCells = parseScheduleCells(scheduleList?.get(weekIndex-1))
                     timetableCells.forEach { cell ->
-                        if (cell.weeks.getOrNull(weekIndex - 1) == '1') {
-                            cell.currentWeekSlots(weekIndex).forEach { slot ->
-                                if (slot.weekday in 1..7 && slot.period in 1..6) {
-                                    TimetableCard(
-                                        cell = cell,
-                                        slot = slot,
-                                        modifier = Modifier
-                                            .offset(
-                                                x = (cellWidth + cellSpacing) * slot.weekday,
-                                                y = (cellHeight + cellSpacing) * slot.period
-                                            )
-                                            .width(cellWidth)
-                                            .height(cellHeight),
-                                        textFontSize = cardTextFontSize,
-                                        onClick = {
-                                            selectedDetail = TimetableDetail(cell = cell, slot = slot)
-                                        }
+                        val slot = TimetableSlot(cell.weekDay, cell.time, cell.addr)
+                        if (slot.weekday in 1..7 && slot.period in 1..6) {
+                            TimetableCard(
+                                cell = cell,
+                                slot = slot,
+                                modifier = Modifier
+                                    .offset(
+                                        x = (cellWidth + cellSpacing) * slot.weekday,
+                                        y = (cellHeight + cellSpacing) * slot.period
                                     )
+                                    .width(cellWidth)
+                                    .height(cellHeight),
+                                textFontSize = cardTextFontSize,
+                                onClick = {
+                                    selectedDetail = TimetableDetail(cell = cell, slot = slot)
                                 }
-                            }
+                            )
                         }
                     }
                 }

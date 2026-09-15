@@ -33,8 +33,10 @@ data class Xswpkc(
 data class CxxszhxqkbContent(
     val KCM: String = "",    //课程名
     val SKJS: String = "",   //上课教师
-    val YPSJDD: String = "", //时间地点
-    val SKZC: String = ""    //上课周次
+    val SKXQ: Int = 0,         //星期几
+    val KSJC: String = "",     // 开始节次
+    val JSJC: String = "",     // 结束节次
+    val JASMC: String = "",    // 教室名称
 )
 
 @Serializable

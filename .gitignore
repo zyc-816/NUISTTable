@@ -42,5 +42,7 @@ replay_pid*
 .kotlin/
 
 CLAUDE.md
+deepseek-sessions.json
+deepseek-sessions.json.bak
 
 app/release

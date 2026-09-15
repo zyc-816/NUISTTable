@@ -67,9 +67,3 @@ suspend fun saveIsDarkMode(context: Context, isDarkMode: Boolean) {
         preferences[IS_DARK_MODE_KEY] = isDarkMode
     }
 }
-
-suspend fun clearTimetableCache(context: Context) {
-    context.dataStore.edit { preferences ->
-        preferences.remove(TIMETABLE_CACHE_KEY)
-    }
-}

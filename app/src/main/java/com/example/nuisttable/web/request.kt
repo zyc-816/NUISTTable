@@ -23,10 +23,10 @@ fun beginDateApi(XN: String, XQ: String) = Api(
 )
 
 //获取已排课全年课表接口
-fun scheduleApi(term : String) = Api(
+fun scheduleApi(term : String, week: String) = Api(
     name = "获取已排课课程",
     path = "/jwapp/sys/wdkb/modules/xskcb/cxxszhxqkb.do",
-    params = mapOf("XNXQDM" to term) //待获取term
+    params = mapOf("XNXQDM" to term, "SKZC" to week) //待获取term
 )
 
 //获取未排课课程接口
