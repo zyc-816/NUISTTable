@@ -65,14 +65,16 @@ private const val totalWeeks = 20
 
 data class TimetableSlot(
     val weekday: Int,
-    val period: Int,
+    val beginTime: Int,
+    val endTime: Int,
     val address: String = ""
 )
 data class TimetableCell(
     val className: String = "",
     val teacherName: String = "",
     val weekDay: Int = 0,
-    val time: Int = 0,
+    val beginTime: Int = 0,
+    val endTime: Int = 0,
     val addr: String = "",
     val backgroundPreset: CourseCardColorPreset? = null
 )
@@ -91,7 +93,8 @@ private fun parseScheduleCells(
             className = data.KCM,
             teacherName = data.SKJS,
             weekDay = data.SKXQ,
-            time = data.JSJC.toInt() / 2,
+            beginTime = data.KSJC.toInt(),
+            endTime = data.JSJC.toInt(),
             addr = data.JASMC,
             backgroundPreset = CourseCardColorPreset.entries[index]
         )
@@ -468,18 +471,21 @@ fun Timetable(modifier: Modifier = Modifier) {
 
                     val timetableCells = parseScheduleCells(scheduleList?.get(weekIndex-1))
                     timetableCells.forEach { cell ->
-                        val slot = TimetableSlot(cell.weekDay, cell.time, cell.addr)
-                        if (slot.weekday in 1..7 && slot.period in 1..6) {
+                        val slot = TimetableSlot(cell.weekDay, cell.beginTime, cell.endTime, cell.addr)
+                        if (slot.weekday in 1..7 && slot.beginTime in 1..12 && slot.endTime in 1..12 && slot.beginTime <= slot.endTime) {
+                            val startClass = (slot.beginTime + 1) / 2
+                            val endClass = (slot.endTime + 1) / 2
+                            val classRange = endClass - startClass + 1
                             TimetableCard(
                                 cell = cell,
                                 slot = slot,
                                 modifier = Modifier
                                     .offset(
                                         x = (cellWidth + cellSpacing) * slot.weekday,
-                                        y = (cellHeight + cellSpacing) * slot.period
+                                        y = (cellHeight + cellSpacing) * startClass
                                     )
                                     .width(cellWidth)
-                                    .height(cellHeight),
+                                    .height(cellHeight * classRange),
                                 textFontSize = cardTextFontSize,
                                 onClick = {
                                     selectedDetail = TimetableDetail(cell = cell, slot = slot)
